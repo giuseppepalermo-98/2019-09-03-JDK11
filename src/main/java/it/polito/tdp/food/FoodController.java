@@ -5,7 +5,10 @@
 package it.polito.tdp.food;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.food.model.Adiacente;
 import it.polito.tdp.food.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,7 +43,7 @@ public class FoodController {
     private Button btnCammino; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxPorzioni"
-    private ComboBox<?> boxPorzioni; // Value injected by FXMLLoader
+    private ComboBox<String> boxPorzioni; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
@@ -48,21 +51,67 @@ public class FoodController {
     @FXML
     void doCammino(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Cerco cammino peso massimo...");
+    	String selezionato=this.boxPorzioni.getValue();
+    	
+    	if(selezionato == null) {
+    		this.txtResult.appendText("Errore devi selezionare una porzione");
+    	}
+    	int N;
+    	try {
+    		N=Integer.parseInt(this.txtPassi.getText());
+    	}catch(NumberFormatException e) {
+    		this.txtResult.appendText("Formato dei passi NON corretto");
+    		return;
+    	}
+    	
+    	model.cammino(selezionato,N);
+    	List<String> cammino=model.getBestCammino();
+    	
+    	if(cammino != null) {
+    		for(String s: cammino) {
+    			this.txtResult.appendText(s+"\n");
+    		}
+    		this.txtResult.appendText("Questo cammino ha peso "+model.getPesoMax());
+    	}else
+    		this.txtResult.appendText("NON ESISTE UN CAMMINO MINIMO");
+    	
+    	
     }
 
     @FXML
     void doCorrelate(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Cerco porzioni correlate...");
+    	String selezionato=this.boxPorzioni.getValue();
+    	
+    	if(selezionato == null) {
+    		this.txtResult.appendText("Errore devi selezionare una porzione");
+    	}
+    	
+    	this.txtResult.appendText("Porzioni correlate a "+selezionato+":\n");
+    	List<Adiacente> vicini = model.getListAdiacenti(selezionato);
+    	for(Adiacente a: vicini) {
+    		this.txtResult.appendText(String.format("%s %f\n", a.getName(), a.getPeso()));
+    	}
     	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Creazione grafo...");
+    
+    	Integer calorie;
     	
+    	try {
+    		calorie=Integer.parseInt(this.txtCalorie.getText());
+    	}catch(NumberFormatException e) {
+    		this.txtResult.appendText("Formato delle calorie NON corretto");
+    		return;
+    	}
+    
+    	this.txtResult.appendText(model.creaGrafo(calorie));
+    	
+    	this.boxPorzioni.getItems().clear();
+    	this.boxPorzioni.getItems().addAll(model.getVerticiGrafo());
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
